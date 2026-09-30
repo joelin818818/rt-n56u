@@ -131,7 +131,13 @@
 			{"ttyd_port", "", NULL, EVM_RESTART_TTYD},
 #endif
 #if defined (APP_VLMCSD)
-			{"vlmcsd_enable", "", NULL, EVM_RESTART_VLMCSD},
+		{"vlmcsd_enable", "", NULL, EVM_RESTART_VLMCSD},
+#endif
+#if defined (APP_SMARTDNS)
+		{"smartdns_enable", "", NULL, EVM_RESTART_SMARTDNS},
+		{"smartdns_port", "", NULL, EVM_RESTART_SMARTDNS},
+		{"smartdns_servers", "", NULL, EVM_RESTART_SMARTDNS},
+		{"smartdns_cache", "", NULL, EVM_RESTART_SMARTDNS},
 #endif
 #if defined (APP_NAPT66)
 			{"napt66_enable", "", NULL, FALSE},
@@ -1066,6 +1072,9 @@
 #endif
 #if defined(APP_DNSFORWARDER)
 		{EVM_RESTART_DNSFORWARDER,	EVT_RESTART_DNSFORWARDER,	RCN_RESTART_DNSFORWARDER, 0},
+#endif
+#if defined(APP_SMARTDNS)
+		{EVM_RESTART_SMARTDNS,	EVT_RESTART_SMARTDNS,	RCN_RESTART_SMARTDNS,	0},
 #endif
 #if defined(APP_SHADOWSOCKS)
 		{EVM_RESTART_SHADOWSOCKS,	EVT_RESTART_SHADOWSOCKS,	RCN_RESTART_SHADOWSOCKS,  0},

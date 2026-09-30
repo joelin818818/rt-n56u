@@ -346,7 +346,16 @@ start_dns_dhcpd(int is_ap_mode)
 		fprintf(fp, "cache-size=%d\n", DNS_RELAY_CACHE_MAX);
 		fprintf(fp, "dns-forward-max=%d\n", DNS_RELAY_QUERIES_MAX);
 		fprintf(fp, "addn-hosts=%s/hosts\n", storage_dir);
+#if defined(APP_SMARTDNS)
+		if (nvram_get_int("smartdns_enable") == 1) {
+			fprintf(fp, "no-resolv\n");
+			fprintf(fp, "server=127.0.0.1#%d\n", nvram_get_int("smartdns_port"));
+		} else {
+			fprintf(fp, "servers-file=%s\n", DNS_SERVERS_FILE);
+		}
+#else
 		fprintf(fp, "servers-file=%s\n", DNS_SERVERS_FILE);
+#endif
 		fprintf(fp, "dhcp-hostsfile=%s/dhcp.conf\n", storage_dir);
 	} else {
 		is_dns_used = 0;
@@ -503,6 +512,11 @@ start_dns_dhcpd(int is_ap_mode)
 
 	if (is_dns_used)
 		fill_dnsmasq_servers();
+
+#if defined(APP_SMARTDNS)
+	if (nvram_get_int("smartdns_enable") == 1)
+		start_smartdns();
+#endif
 
 	if (is_dns_used || is_dhcp_used)
 		return eval("/usr/sbin/dnsmasq");

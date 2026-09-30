@@ -545,6 +545,10 @@ void stop_vlmcsd(void);
 void start_vlmcsd(void);
 void restart_vlmcsd(void);
 #endif
+#if defined(APP_SMARTDNS)
+void start_smartdns(void);
+void restart_smartdns(void);
+#endif
 #if defined(APP_NAPT66)
 void start_napt66(void);
 #endif
