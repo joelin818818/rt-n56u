@@ -1026,6 +1026,28 @@ function simplyMAC(fullMAC){
                                             </td>
                                         </tr>
                                         <tr>
+                                            <th><#WAN_RANDMAC_Enable#></th>
+                                            <td>
+                                                <select name="wan_randmac_enable" class="input">
+                                                    <option value="0" <% nvram_match_x("", "wan_randmac_enable", "0", "selected"); %>>关闭</option>
+                                                    <option value="1" <% nvram_match_x("", "wan_randmac_enable", "1", "selected"); %>>开启</option>
+                                                </select>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th><#WAN_RANDMAC_Interval#></th>
+                                            <td>
+                                                <input type="text" name="wan_randmac_interval" class="input" maxlength="5" size="8" value="<% nvram_get_x("","wan_randmac_interval"); %>"/>
+                                                <select name="wan_randmac_unit" class="input">
+                                                    <option value="0" <% nvram_match_x("", "wan_randmac_unit", "0", "selected"); %>>分钟</option>
+                                                    <option value="1" <% nvram_match_x("", "wan_randmac_unit", "1", "selected"); %>>小时</option>
+                                                </select>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="2"><span class="explain"><#WAN_RANDMAC_Desc#></span></td>
+                                        </tr>
+                                        <tr>
                                             <th><#WAN_TTL_Fix#></th>
                                             <td>
                                                 <select name="wan_ttl_fix" class="input">

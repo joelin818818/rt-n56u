@@ -17,6 +17,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include <stdarg.h>
 #include <errno.h>
 #include <syslog.h>
@@ -145,6 +146,20 @@ reset_man_vars(void)
 	nvram_set_int_temp("manv_err", 0);
 }
 
+static void
+gen_random_wan_mac(char *buf, int size)
+{
+	unsigned char m[6];
+	int i;
+
+	srandom((unsigned int)(time(NULL) ^ getpid()));
+	m[0] = (unsigned char)((random() & 0xFC) | 0x02); /* locally-administered, unicast */
+	for (i = 1; i < 6; i++)
+		m[i] = (unsigned char)random();
+	snprintf(buf, size, "%02X:%02X:%02X:%02X:%02X:%02X",
+		m[0], m[1], m[2], m[3], m[4], m[5]);
+}
+
 void
 reset_wan_vars(void)
 {
@@ -246,11 +261,17 @@ reset_wan_vars(void)
 	}
 
 	mac_buf[0] = 0;
-	mac_conv("wan_hwaddr_x", -1, mac_buf);
-	if (strlen(mac_buf) == 17)
+	if (nvram_match("wan_randmac_enable", "1")) {
+		gen_random_wan_mac(mac_buf, sizeof(mac_buf));
 		nvram_set("wan_hwaddr", mac_buf);
-	else
-		nvram_set("wan_hwaddr", nvram_safe_get("il1macaddr"));
+	}
+	else {
+		mac_conv("wan_hwaddr_x", -1, mac_buf);
+		if (strlen(mac_buf) == 17)
+			nvram_set("wan_hwaddr", mac_buf);
+		else
+			nvram_set("wan_hwaddr", nvram_safe_get("il1macaddr"));
+	}
 
 	set_wan_unit_param(unit, "hwaddr");
 

@@ -1087,6 +1087,28 @@ watchdog_on_timer(void)
 	setkernel_tz();
 
 	storage_save_time(10);
+
+	/* periodic random WAN MAC rotation */
+	if (nvram_match("wan_randmac_enable", "1")) {
+		int rint = atoi(nvram_safe_get("wan_randmac_interval"));
+		int runit = atoi(nvram_safe_get("wan_randmac_unit"));
+		long rgap = (runit == 1) ? (long)rint * 3600 : (long)rint * 60;
+		time_t rnow = time(NULL);
+		time_t rlast = (time_t)atoi(nvram_safe_get("wan_randmac_last"));
+
+		if (rgap < 60) rgap = 60;
+		if (rlast == 0) {
+			char tbuf[16];
+			snprintf(tbuf, sizeof(tbuf), "%ld", (long)rnow);
+			nvram_set("wan_randmac_last", tbuf);
+		}
+		else if (rnow - rlast >= rgap) {
+			char tbuf[16];
+			snprintf(tbuf, sizeof(tbuf), "%ld", (long)rnow);
+			nvram_set("wan_randmac_last", tbuf);
+			notify_rc("manual_wan_reconnect");
+		}
+	}
 }
 
 static void
