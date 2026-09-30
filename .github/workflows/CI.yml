@@ -21,8 +21,8 @@ permissions:
 
 jobs:
   build:
-    name: build ${{ env.TARGET }}
-    runs-on: ubuntu-20.04
+    name: build PSG1218
+    runs-on: ubuntu-22.04  # 构建环境（最新稳定 LTS）
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -60,7 +60,7 @@ jobs:
 
       - name: Upload TRX to Release
         if: ${{ startsWith(github.ref, 'refs/tags/') && success() }}
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: ${{ env.IMAGES_DIR }}/*.trx
         env:
