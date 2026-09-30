@@ -25,12 +25,14 @@ jobs:
     runs-on: ubuntu-22.04  # 构建环境（最新稳定 LTS）
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install build dependencies
         run: |
-          sudo apt update
-          sudo apt install -y libtool-bin gperf python3-docutils autopoint gettext
+          sudo apt-get update
+          sudo apt-get install -y build-essential libncurses5-dev libssl-dev zlib1g-dev \
+            unzip flex bison texinfo gperf autoconf automake libtool-bin python3-docutils \
+            gettext autopoint pkg-config fakeroot u-boot-tools
 
       - name: Prepare toolchain
         run: |
@@ -41,14 +43,24 @@ jobs:
         run: |
           cd trunk
           mkdir -p ${IMAGES_DIR}
-          fakeroot ./build_firmware_ci ${TARGET}
-          if [ $? -eq 0 ]; then
+          rm -f images/*.trx 2>/dev/null || true
+          fakeroot ./build_firmware_modify ${TARGET} 2>&1 | tee build.log
+          rc=${PIPESTATUS[0]}
+          if [ "$rc" -eq 0 ] && ls images/*.trx >/dev/null 2>&1; then
             cp -f images/*.trx ${IMAGES_DIR}/
+            echo "================= Build OK ================="
+            ls -lh ${IMAGES_DIR}
           else
-            echo "Build failed"; tail -60 build.log; exit 1
+            echo "Build failed (rc=$rc)"; exit 1
           fi
-          echo "================= Build OK ================="
-          ls -lh ${IMAGES_DIR}
+
+      - name: Upload build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: trunk/build.log
+          if-no-files-found: warn
 
       - name: Upload TRX to Artifacts
         if: ${{ success() }}
