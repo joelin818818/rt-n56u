@@ -1,83 +1,67 @@
-name: CI
+name: Build PSG1218 Firmware
 
-# Controls when the action will run. 
-on: 
+# 触发条件：
+#   - 推送到 master 分支：构建并把 .trx 保存到 Artifacts
+#   - 推送 tag（v*）：构建并把 .trx 附加到 GitHub Release
+#   - 手动触发（workflow_dispatch）
+on:
   push:
-  pull_request:
+    branches:
+      - master
+    tags:
+      - 'v*'
   workflow_dispatch:
-    inputs:
-      debug_enabled:
-        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'     
-        required: false
-        default: 'no'
-  release:
-    types: [published]
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+env:
+  TARGET: PSG1218          # 目标机型（Phicomm K2 / PSG1218，64M 内存版）
+  IMAGES_DIR: /opt/images  # 产物临时目录
+
+permissions:
+  contents: write          # 允许创建/更新 Release 与上传产物
+
 jobs:
   build:
-    name: build
+    name: build ${{ env.TARGET }}
     runs-on: ubuntu-20.04
-    if: ${{ !(github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) }}
-    env:
-      build_variant: ${{ matrix.build_variant }}
-      targets: ${{ matrix.targets }}
-      images_dir: /opt/images
-    strategy:
-      matrix:
-        include:
-          - build_variant: "mt7620"
-            targets: "PSG1208 PSG1218 NEWIFI-MINI MI-MINI MI-3 OYE-001 5K-W20"
-          - build_variant: "mt7628"
-            targets: "HC5861B MI-NANO MZ-R13 MZ-R13P 360P2 HC5761A HC5661A"
-          - build_variant: "mt7621"
-            targets: "K2P_nano K2P DIR-878 RM2100 CR660x"
-          - build_variant: "mt7621-usb"
-            targets: "XY-C1 JCG-836PRO JCG-AC860M JCG-Y2 DIR-882 A3004NS MSG1500 WR1200JS MI-R3G NEWIFI3 B70"
     steps:
-      - uses: actions/checkout@v2
-      - name: Prepare environment
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
         run: |
           sudo apt update
-          sudo apt install libtool-bin gperf python3-docutils autopoint gettext
-      - name: Run shellcheck
-        run: sh ./trunk/tools/shellcheck.sh
+          sudo apt install -y libtool-bin gperf python3-docutils autopoint gettext
+
       - name: Prepare toolchain
         run: |
           cd toolchain-mipsel
           sh dl_toolchain.sh
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled == 'yes' }}
-        with:
-          limit-access-to-actor: true
-      - name: Start build
+
+      - name: Build firmware (${{ env.TARGET }})
         run: |
           cd trunk
-          mkdir -p ${images_dir}
-          for m in $targets; do fakeroot ./build_firmware_ci $m; \
-          if [ $? = 0 ]; then cp -f images/*.trx ${images_dir}/$m.trx; else exit 1; fi; \
-          ./clear_tree_simple >/dev/null 2>&1; done
-      - name: Create archive
-        if: ${{ github.event_name != 'release' && success() }}
-        run: |
-          ls -lh ${images_dir}
-          GIT_VERSION=`git rev-parse --short=7 HEAD 2>/dev/null` && [ -n "$GIT_VERSION" ] && \
-          image_name=images_${build_variant}_${GIT_VERSION} || image_name=images_${build_variant}
-          cd ${images_dir}; md5sum *.trx |tee md5sum.txt; 7z a -mx=9 ${image_name}.7z ./*
-          echo "image_name=${image_name}" >> $GITHUB_ENV
-      - name: Upload images to Artifact
-        if: ${{ github.event_name != 'release' && success() }}
-        uses: actions/upload-artifact@v2.2.1
+          mkdir -p ${IMAGES_DIR}
+          fakeroot ./build_firmware_ci ${TARGET}
+          if [ $? -eq 0 ]; then
+            cp -f images/*.trx ${IMAGES_DIR}/
+          else
+            echo "Build failed"; tail -60 build.log; exit 1
+          fi
+          echo "================= Build OK ================="
+          ls -lh ${IMAGES_DIR}
+
+      - name: Upload TRX to Artifacts
+        if: ${{ success() }}
+        uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.image_name }}
-          path: ${{ env.images_dir }}/*.7z
-      - name: Upload images to Releases
-        if: ${{ github.event_name == 'release' && success() }}
-        uses: svenstaro/upload-release-action@2.2.0
+          name: ${{ env.TARGET }}-firmware
+          path: ${{ env.IMAGES_DIR }}/*.trx
+          if-no-files-found: error
+
+      - name: Upload TRX to Release
+        if: ${{ startsWith(github.ref, 'refs/tags/') && success() }}
+        uses: softprops/action-gh-release@v2
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ${{ env.images_dir }}/*.trx
-          tag: ${{ github.ref }}
-          overwrite: true
-          file_glob: true
+          files: ${{ env.IMAGES_DIR }}/*.trx
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
