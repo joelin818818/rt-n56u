@@ -450,9 +450,8 @@ if (found_app_mentohust()){
 	menuL2_title.push("mentohust");
 } else menuL2_title.push("");
 
-// 插件分组：后续新增插件都挂在该分组下（分组标题用 link "#" 标记，仅作显示）
+// 插件分组：后续新增插件都挂在该分组下（分组标题用 link "#" 标记，仅作显示；link 在下方 menuL2_link 初始化后对应 push）
 menuL2_title.push("插件");
-menuL2_link.push("#");
 
 if (found_app_smartdns()){
 	menuL2_title.push("SmartDNS");
@@ -475,6 +474,8 @@ if (found_app_shadowsocks()){
 if (found_app_mentohust()){
 	menuL2_link.push(mentohust_array[1]);
 } else menuL2_link.push("");
+
+menuL2_link.push("#");	// 「插件」分组标题（与上方 menuL2_title.push("插件") 对应）
 
 if (found_app_smartdns()){
 	menuL2_link.push("Advanced_SmartDNS_Content.asp");
