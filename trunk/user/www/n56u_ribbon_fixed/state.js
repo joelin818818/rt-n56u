@@ -577,35 +577,35 @@ function show_menu(L1, L2, L3){
 		}
 	}
 
+	// 全展开树：每个 L1 下直接挂自己的 L2 子项
+	// L1=7 高级设置挂标准子项，L1=8 插件挂插件子项（SmartDNS 等），其余 L1 无子项
 	for(i = 1; i <= menuL1_title.length-1; i++){
 		if(menuL1_title[i] == "")
 			continue;
-		else if(L1 == i && L2 <= 0)
+		var isPluginL1 = (i == 8);
+		var hasChildren = (i == 7 || isPluginL1);
+		if(L1 == i && L2 <= 0)
 			menu1_code += '<li class="active" id="option'+i+'"><a href="javascript:;"><i class="'+menuL1_icon[i]+'"></i>&nbsp;&nbsp;'+menuL1_title[i]+'</a></li>\n';
 		else
 			menu1_code += '<li id="option'+i+'"><a href="'+menuL1_link[i]+'" title="'+menuL1_link[i]+'"><i class="'+menuL1_icon[i]+'"></i>&nbsp;&nbsp;'+menuL1_title[i]+'</a></li>\n';
+
+		if(!hasChildren)
+			continue;
+
+		for(var j = 1; j <= menuL2_title.length-1; ++j){
+			if(menuL2_title[j] == "")
+				continue;
+			if((j >= menuL2_plugin_start) != isPluginL1)
+				continue;
+			if(L2 == j)
+				menu1_code += '<li class="active"><a href="javascript: void(0)" style="color: #005580; font-weight: bold; padding-left: 20px;"><i class="icon-minus"></i>&nbsp;&nbsp;'+menuL2_title[j]+'</a></li>\n';
+			else
+				menu1_code += '<li><a href="'+menuL2_link[j]+'" style="padding-left: 20px;"><i class="icon-minus"></i>&nbsp;&nbsp;'+menuL2_title[j]+'</a></li>\n';
+		}
 	}
 
 	$("mainMenu").innerHTML = menu1_code;
-
-	for(var i = 1; i <= menuL2_title.length-1; ++i){
-		if(menuL2_title[i] == "")
-			continue;
-		var isPluginItem = (i >= menuL2_plugin_start); // 插件 L2 子项（SmartDNS 等）
-		if(menuL1_title[L1] == "插件"){   // 「插件」一级菜单：仅显示其下的插件子项
-			if(!isPluginItem)
-				continue;
-		}
-		else{                              // 其余一级菜单：隐藏插件子项
-			if(isPluginItem)
-				continue;
-		}
-		if(L2 == i)
-			menu2_code += '<a href="javascript: void(0)" style="color: #005580; font-weight: bold"><i class="icon-minus"></i>&nbsp;&nbsp;'+menuL2_title[i]+'</a>\n';
-		else
-			menu2_code += '<a href="'+menuL2_link[i]+'"><i class="icon-minus"></i>&nbsp;&nbsp;'+menuL2_title[i]+'</a>\n';
-	}
-	$("subMenu").innerHTML = menu2_code;
+	$("subMenu").innerHTML = "";
 
 	if(L3){
 		tab_code = '<ul class="nav nav-tabs" style="margin-bottom: 0px;">\n';
