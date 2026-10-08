@@ -12,6 +12,13 @@ on:
       - 'v*'
   workflow_dispatch:
 
+# 去重：发版时同一 commit 会同时触发 master 与 tag 两次构建，
+# 按 commit SHA 分组，后到的运行取消先到的，避免重复烧构建时长。
+# （推 master 在前、打 tag 在后，因此保留的是带 Release 的那次）
+concurrency:
+  group: build-${{ github.sha }}
+  cancel-in-progress: true
+
 env:
   TARGET: PSG1218          # 目标机型（Phicomm K2 / PSG1218，64M 内存版）
   IMAGES_DIR: /opt/images  # 产物临时目录
@@ -27,6 +34,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      # 缓存交叉工具链（约数百 MB，每次下载+解包要 1~2 分钟）。
+      # 工具链来自 hanwckf/padavan-toolchain v1.1，我们从不改它，故用固定 key。
+      # 若日后升级工具链版本，把 key 后缀 v1.1 改掉即可让缓存失效。
+      - name: Cache toolchain
+        uses: actions/cache@v4
+        with:
+          path: toolchain-mipsel/toolchain-3.4.x
+          key: padavan-toolchain-v1.1
+
       - name: Install build dependencies
         run: |
           sudo apt-get update
@@ -38,6 +54,24 @@ jobs:
         run: |
           cd toolchain-mipsel
           sh dl_toolchain.sh
+
+      # 缓存「我们不改、却最耗时」的编译树：内核 / busybox / 公共库。
+      # build_firmware_modify 本身只 rm romfs/images 再 make，是增量构建，
+      # 缓存这些 .o/.a 后，仅改 WebUI(www)/rc/httpd/smartdns 等小模块时
+      # 内核与库无需重编，整体构建从 ~15 分钟降到分钟级。
+      # 注意：linux-3.4.x 是 git 跟踪目录，缓存会覆盖 git 内容，因此
+      # 1) 固定 key、不设 restore-keys 回退，避免旧树覆盖新改动；
+      # 2) 一旦你改了内核 / busybox.config / libs 源码，必须把 key 后缀
+      #    v1 升到 v2，让缓存 miss 触发一次全新全量构建。
+      # 切勿缓存 trunk/user 整体（含我们常改的 www/rc/httpd），否则改动会被旧产物覆盖。
+      - name: Cache build trees (kernel / busybox / libs)
+        uses: actions/cache@v4
+        with:
+          path: |
+            trunk/linux-3.4.x
+            trunk/user/busybox
+            trunk/libs
+          key: padavan-build-v1
 
       - name: Build firmware (${{ env.TARGET }})
         run: |

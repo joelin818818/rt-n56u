@@ -32,7 +32,6 @@ $j(document).ready(function() {
 	init_itoggle('ttyd_enable', change_ttyd_enabled);
 	init_itoggle('vlmcsd_enable');
 	init_itoggle('napt66_enable');
-	init_itoggle('smartdns_enable', change_smartdns_enabled);
 	init_itoggle('watchdog_cpu');
 });
 
@@ -94,15 +93,6 @@ function initial(){
 	
 	if(!found_app_napt66()){
 		showhide_div('div_napt66', 0);
-	}
-
-	if(!found_app_smartdns()){
-		showhide_div('div_smartdns', 0);
-		showhide_div('smartdns_port', 0);
-		showhide_div('smartdns_servers', 0);
-		showhide_div('smartdns_cache', 0);
-	}else{
-		change_smartdns_enabled();
 	}
 }
 
@@ -265,13 +255,6 @@ function change_ttyd_enabled(){
 	var v = document.form.ttyd_enable[0].checked;
 	showhide_div('ttyd_webui', v);
 	showhide_div('ttyd_port', v);
-}
-
-function change_smartdns_enabled(){
-	var v = document.form.smartdns_enable[0].checked;
-	showhide_div('smartdns_port', v);
-	showhide_div('smartdns_servers', v);
-	showhide_div('smartdns_cache', v);
 }
 
 function on_ttyd_link(){
@@ -589,43 +572,6 @@ function on_ttyd_link(){
                                                 </div>
                                             </td>
                                         </tr>
-
-                                        <tr id="div_smartdns">
-                                            <th width="50%">SmartDNS 开关</th>
-                                            <td colspan="2">
-                                                <div class="main_itoggle">
-                                                    <div id="smartdns_enable_on_of">
-                                                        <input type="checkbox" id="smartdns_enable_fake" <% nvram_match_x("", "smartdns_enable", "1", "value=1 checked"); %><% nvram_match_x("", "smartdns_enable", "0", "value=0"); %>>
-                                                    </div>
-                                                </div>
-                                                <div style="position: absolute; margin-left: -10000px;">
-                                                    <input type="radio" name="smartdns_enable" id="smartdns_enable_1" class="input" value="1" onclick="change_smartdns_enabled();" <% nvram_match_x("", "smartdns_enable", "1", "checked"); %>/>是
-                                                    <input type="radio" name="smartdns_enable" id="smartdns_enable_0" class="input" value="0" onclick="change_smartdns_enabled();" <% nvram_match_x("", "smartdns_enable", "0", "checked"); %>/>否
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr id="smartdns_port">
-                                            <th width="50%">本地端口</th>
-                                            <td>
-                                                <input type="text" maxlength="6" class="input" size="15" name="smartdns_port" style="width: 145px" value="<% nvram_get_x("","smartdns_port"); %>" />
-                                                <br/><span class="explain">SmartDNS 直连 DNS 端口，须保持 53（与 DHCP 下发的 DNS 端口一致）。改非 53 会导致 LAN 设备无法解析。</span>
-                                            </td>
-                                        </tr>
-                                        <tr id="smartdns_servers">
-                                            <th width="50%">上游 DNS</th>
-                                            <td>
-                                                <input type="text" maxlength="256" class="input" size="60" name="smartdns_servers" value="<% nvram_get_x("","smartdns_servers"); %>" /><br/>
-                                                <span class="explain">空格分隔，例如 223.5.5.5:53 119.29.29.29:53</span>
-                                            </td>
-                                        </tr>
-                                        <tr id="smartdns_cache">
-                                            <th width="50%">缓存条数</th>
-                                            <td>
-                                                <input type="text" maxlength="8" class="input" size="15" name="smartdns_cache" style="width: 145px" value="<% nvram_get_x("","smartdns_cache"); %>" />
-                                            </td>
-                                        </tr>
-
-                                        <% smartdns_status(); %>
 
                                         <tr>
                                             <th><#Adm_Svc_lltd#></th>

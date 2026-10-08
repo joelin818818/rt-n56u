@@ -450,6 +450,14 @@ if (found_app_mentohust()){
 	menuL2_title.push("mentohust");
 } else menuL2_title.push("");
 
+// 插件分组：后续新增插件都挂在该分组下（分组标题用 link "#" 标记，仅作显示）
+menuL2_title.push("插件");
+menuL2_link.push("#");
+
+if (found_app_smartdns()){
+	menuL2_title.push("SmartDNS");
+} else menuL2_title.push("");
+
 
 menuL2_link  = new Array("", tablink[0][1], tablink[1][1], tablink[2][1], tablink[3][1], tablink[4][1], tablink[5][1], tablink[6][1], tablink[7][1], support_2g_radio() ? tablink[8][1] : "Main_EStatus_Content.asp", tablink[9][1]);
 if (found_app_scutclient()){
@@ -466,6 +474,10 @@ if (found_app_shadowsocks()){
 
 if (found_app_mentohust()){
 	menuL2_link.push(mentohust_array[1]);
+} else menuL2_link.push("");
+
+if (found_app_smartdns()){
+	menuL2_link.push("Advanced_SmartDNS_Content.asp");
 } else menuL2_link.push("");
 
 //Level 1 Menu in Gateway, Router mode
@@ -581,6 +593,8 @@ function show_menu(L1, L2, L3){
 	for(var i = 1; i <= menuL2_title.length-1; ++i){
 		if(menuL2_title[i] == "")
 			continue;
+		else if(menuL2_link[i] == "#")	// 分组标题（如"插件"），仅显示不可点击
+			menu2_code += '<a href="javascript: void(0)" style="cursor: default; font-weight: bold; color: #555;"><i class="icon-th-large"></i>&nbsp;&nbsp;'+menuL2_title[i]+'</a>\n';
 		else if(L2 == i)
 			menu2_code += '<a href="javascript: void(0)" style="color: #005580; font-weight: bold"><i class="icon-minus"></i>&nbsp;&nbsp;'+menuL2_title[i]+'</a>\n';
 		else

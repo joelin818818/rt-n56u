@@ -1,3 +1,17 @@
+# PSG1218 固件 v1.3.0 更新说明
+
+基于 Padavan（hanwckf/rt-n56u 分支）为**斐讯 K2（PSG1218，64MB 内存 / 8MB 闪存 / 无 USB）**定制构建。
+
+## 本次更新
+- **SmartDNS 独立配置页**：将 SmartDNS 设置从「系统管理 → 服务」拆出，新增「插件 → SmartDNS」独立页面（Advanced_SmartDNS_Content.asp），配置入口更清晰；未开启 smartdns 编译时不生成该页面。
+- **构建提速（工程优化，无功能影响）**：CI 增加编译缓存，仅改 WebUI/rc 等小模块时内核与公共库免重编，GitHub Actions 构建从约 15 分钟降至分钟级。
+
+## 使用说明
+- 固件仅适配 PSG1218（斐讯 K2），由 GitHub Actions 自动构建，`.trx` 见本 Release 附件。
+- 刷机前请先备份原厂设置；首次刷入建议恢复出厂设置。
+
+---
+
 # PSG1218 固件 v1.2.0 更新说明
 
 基于 Padavan（hanwckf/rt-n56u 分支）为**斐讯 K2（PSG1218，64MB 内存 / 8MB 闪存 / 无 USB）**定制构建。
