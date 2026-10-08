@@ -552,7 +552,7 @@ struct nvram_pair router_defaults[] = {
 #if defined(APP_SMARTDNS)
 	/* smartdns */
 	{ "smartdns_enable", "0" },
-	{ "smartdns_port", "6053" },
+	{ "smartdns_port", "53" },
 	{ "smartdns_servers", "223.5.5.5:53 119.29.29.29:53" },
 	{ "smartdns_cache", "512" },
 #endif

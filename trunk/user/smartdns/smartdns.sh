@@ -4,7 +4,7 @@ CONF=/etc/smartdns.conf
 
 gen_conf(){
 	port=$(nvram get smartdns_port)
-	[ -z "$port" ] && port=6053
+	[ -z "$port" ] && port=53
 	cache=$(nvram get smartdns_cache)
 	[ -z "$cache" ] && cache=512
 	servers=$(nvram get smartdns_servers)
@@ -13,6 +13,12 @@ gen_conf(){
 	echo "server-name smartdns" >> $CONF
 	echo "bind 127.0.0.1:$port" >> $CONF
 	echo "bind-tcp 127.0.0.1:$port" >> $CONF
+	lan=$(nvram get lan_ipaddr)
+	if [ -n "$lan" ]; then
+		echo "bind $lan:$port" >> $CONF
+		echo "bind-tcp $lan:$port" >> $CONF
+	fi
+	echo "hosts-file /etc/hosts" >> $CONF
 	echo "cache-size $cache" >> $CONF
 	echo "prefetch-domain yes" >> $CONF
 	echo "serve-expired yes" >> $CONF

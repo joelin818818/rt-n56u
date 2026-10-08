@@ -32,12 +32,15 @@ Contributors of this project are not responsible for what happens next.
 ### 本仓库固件说明（PSG1218 / 斐讯 K2） ###
 本仓库是 [hanwckf/rt-n56u](https://github.com/hanwckf/rt-n56u) 的一个**定制分支**，仅针对 **斐讯 K2（PSG1218，64MB 内存 / 8MB 闪存 / 无 USB）** 构建固件。
 
-- **当前版本**：v1.1.0（见 [Releases](https://github.com/joelin818818/rt-n56u/releases) 附件中的 `.trx`）
+- **当前版本**：v1.2.0（见 [Releases](https://github.com/joelin818818/rt-n56u/releases) 附件中的 `.trx`）
 - **构建方式**：GitHub Actions 自动构建；每次推送 `v*` 标签即把生成的 `.trx` 发布到 Releases。
-- **本次更新（v1.1.0）**：
-  - 新增 **smartdns 原生管理界面**：在「系统管理 → 服务」页可开关 smartdns，并配置上游 DNS、本地端口、缓存条数；保存后自动联动 dnsmasq，使全 LAN 的 DNS 查询经 smartdns 解析（默认端口 6053，上游 `223.5.5.5:53` / `119.29.29.29:53`）。
+- **本次更新（v1.2.0）**：
+  - **smartdns 改为「直接接管 DNS」**：smartdns 默认监听 53 端口（`127.0.0.1` 与 LAN IP 双绑定），启用时 dnsmasq 仅保留 DHCP（`port=0`），全 LAN 的 DNS 查询直达 smartdns，不再经 dnsmasq 转发，少一跳、解析更快；关闭开关时自动恢复 dnsmasq 作 DNS。
+  - **新增「SmartDNS 状态」行**：在「系统管理 → 服务」页实时显示运行状态（PID）、监听地址、上游 DNS、缓存容量，方便确认是否生效。注意：内置 smartdns（Release33）不暴露缓存命中计数，故状态行显示缓存容量而非命中数。
+- **历史更新（v1.1.0）**：
+  - 新增 smartdns 原生管理界面（dnsmasq 转发模式）：在「系统管理 → 服务」页可开关 smartdns，并配置上游 DNS、本地端口、缓存条数。
   - 关闭 10 个本机用不到的插件（SMBD36 / FFMPEG_NEW / XUPNPD / TCPDUMP / SRELAY / DOGCOM / MINIEAP / NJIT_CLIENT / IPERF3 / VLMCSD）以节省闪存空间。
-- **刷机提示**：刷机前请备份原厂设置；首次刷入建议恢复出厂设置。
+- **刷机提示**：刷机前请备份原厂设置；首次刷入建议恢复出厂设置。若从旧版升级，请在「系统管理 → 服务」中将 smartdns「本地端口」确认为 `53`（旧版残留的 6053 会导致直连模式 DNS 失效）。
 
 ***
 

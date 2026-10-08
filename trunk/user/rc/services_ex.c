@@ -348,8 +348,8 @@ start_dns_dhcpd(int is_ap_mode)
 		fprintf(fp, "addn-hosts=%s/hosts\n", storage_dir);
 #if defined(APP_SMARTDNS)
 		if (nvram_get_int("smartdns_enable") == 1) {
-			fprintf(fp, "no-resolv\n");
-			fprintf(fp, "server=127.0.0.1#%d\n", nvram_get_int("smartdns_port"));
+			/* smartdns 直接监听 53 接管 DNS，dnsmasq 仅保留 DHCP 服务 */
+			fprintf(fp, "port=0\n");
 		} else {
 			fprintf(fp, "servers-file=%s\n", DNS_SERVERS_FILE);
 		}

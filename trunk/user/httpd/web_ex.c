@@ -2054,6 +2054,43 @@ static int dnsforwarder_status_hook(int eid, webs_t wp, int argc, char **argv)
 }
 #endif
 
+#if defined(APP_SMARTDNS)
+static int ej_smartdns_status_hook(int eid, webs_t wp, int argc, char **argv)
+{
+	int running = pids("smartdns");
+	int enabled = nvram_get_int("smartdns_enable");
+	int port = nvram_get_int("smartdns_port");
+	int cache = nvram_get_int("smartdns_cache");
+	const char *servers = nvram_safe_get("smartdns_servers");
+	const char *lanip = nvram_safe_get("lan_ipaddr");
+
+	if (port <= 0) port = 53;
+	if (cache <= 0) cache = 512;
+
+	websWrite(wp, "<tr>\n");
+	websWrite(wp, "<th width=\"50%%\">SmartDNS 状态</th>\n");
+	websWrite(wp, "<td colspan=\"2\">\n");
+	if (enabled != 1) {
+		websWrite(wp, "<span style=\"color:#999\">未启用</span>\n");
+	} else if (running > 0) {
+		websWrite(wp, "运行状态：<b style=\"color:#2e8b57\">运行中</b> (PID %d)<br/>\n", running);
+		websWrite(wp, "接管方式：直接监听 53（dnsmasq 仅作 DHCP）<br/>\n");
+		websWrite(wp, "监听地址：127.0.0.1:%d、%s:%d<br/>\n", port, lanip, port);
+		websWrite(wp, "上游 DNS：%s<br/>\n", (*servers) ? servers : "(未设置)");
+		websWrite(wp, "缓存容量：%d 条<br/>\n", cache);
+		websWrite(wp, "缓存命中数：—（本版本 smartdns 不暴露命中计数，可用解析延迟/缓存容量判断）\n");
+	} else {
+		websWrite(wp, "运行状态：<b style=\"color:#c00\">已停止</b>（已启用但未运行，请保存后重启服务或查看系统日志）<br/>\n");
+		websWrite(wp, "监听地址：127.0.0.1:%d、%s:%d<br/>\n", port, lanip, port);
+		websWrite(wp, "上游 DNS：%s<br/>\n", (*servers) ? servers : "(未设置)");
+		websWrite(wp, "缓存容量：%d 条\n", cache);
+	}
+	websWrite(wp, "</td>\n");
+	websWrite(wp, "</tr>\n");
+	return 0;
+}
+#endif
+
 static int
 ej_detect_internet_hook(int eid, webs_t wp, int argc, char **argv)
 {
@@ -4152,6 +4189,9 @@ struct ej_handler ej_handlers[] =
 #endif
 #if defined (APP_DNSFORWARDER)
 	{ "dnsforwarder_status", dnsforwarder_status_hook},
+#endif
+#if defined (APP_SMARTDNS)
+	{ "smartdns_status", ej_smartdns_status_hook},
 #endif
 	{ "openssl_util_hook", openssl_util_hook},
 	{ "openvpn_srv_cert_hook", openvpn_srv_cert_hook},

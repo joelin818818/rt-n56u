@@ -608,6 +608,7 @@ function on_ttyd_link(){
                                             <th width="50%">本地端口</th>
                                             <td>
                                                 <input type="text" maxlength="6" class="input" size="15" name="smartdns_port" style="width: 145px" value="<% nvram_get_x("","smartdns_port"); %>" />
+                                                <br/><span class="explain">SmartDNS 直连 DNS 端口，须保持 53（与 DHCP 下发的 DNS 端口一致）。改非 53 会导致 LAN 设备无法解析。</span>
                                             </td>
                                         </tr>
                                         <tr id="smartdns_servers">
@@ -623,6 +624,8 @@ function on_ttyd_link(){
                                                 <input type="text" maxlength="8" class="input" size="15" name="smartdns_cache" style="width: 145px" value="<% nvram_get_x("","smartdns_cache"); %>" />
                                             </td>
                                         </tr>
+
+                                        <% smartdns_status(); %>
 
                                         <tr>
                                             <th><#Adm_Svc_lltd#></th>
