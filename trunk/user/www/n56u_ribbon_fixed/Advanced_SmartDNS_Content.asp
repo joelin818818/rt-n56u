@@ -26,6 +26,7 @@ var $j = jQuery.noConflict();
 
 $j(document).ready(function() {
 	init_itoggle('smartdns_enable', change_smartdns_enabled);
+	init_itoggle('smartdns_dualstack', function(){});
 });
 
 function initial(){
@@ -38,6 +39,9 @@ function initial(){
 		showhide_div('smartdns_port', 0);
 		showhide_div('smartdns_servers', 0);
 		showhide_div('smartdns_cache', 0);
+		showhide_div('smartdns_speed', 0);
+		showhide_div('smartdns_dualstack', 0);
+		showhide_div('smartdns_ttl', 0);
 	}else{
 		change_smartdns_enabled();
 	}
@@ -48,6 +52,9 @@ function change_smartdns_enabled(){
 	showhide_div('smartdns_port', v);
 	showhide_div('smartdns_servers', v);
 	showhide_div('smartdns_cache', v);
+	showhide_div('smartdns_speed', v);
+	showhide_div('smartdns_dualstack', v);
+	showhide_div('smartdns_ttl', v);
 }
 
 function applyRule(){
@@ -144,6 +151,41 @@ function applyRule(){
                                             <th width="50%">缓存条数</th>
                                             <td>
                                                 <input type="text" maxlength="8" class="input" size="15" name="smartdns_cache" style="width: 145px" value="<% nvram_get_x("","smartdns_cache"); %>" />
+                                            </td>
+                                        </tr>
+                                        <tr id="smartdns_speed">
+                                            <th width="50%">测速选优</th>
+                                            <td>
+                                                <select name="smartdns_speed_check" class="input" style="width: 220px">
+                                                    <option value="ping,tcp:80,udp:53" <% nvram_match_x("","smartdns_speed_check","ping,tcp:80,udp:53","selected"); %>>综合测速 (Ping + TCP80 + UDP53)</option>
+                                                    <option value="ping" <% nvram_match_x("","smartdns_speed_check","ping","selected"); %>>仅 Ping</option>
+                                                    <option value="tcp:80" <% nvram_match_x("","smartdns_speed_check","tcp:80","selected"); %>>仅 TCP:80</option>
+                                                    <option value="udp:53" <% nvram_match_x("","smartdns_speed_check","udp:53","selected"); %>>仅 UDP:53</option>
+                                                    <option value="none" <% nvram_match_x("","smartdns_speed_check","none","selected"); %>>关闭</option>
+                                                </select>
+                                                <br/><span class="explain">多上游时用于择优选路；综合测速兼容性好，但 UDP:53 可能被运营商限制。</span>
+                                            </td>
+                                        </tr>
+                                        <tr id="smartdns_dualstack">
+                                            <th width="50%">双栈 IP 优选</th>
+                                            <td>
+                                                <div class="main_itoggle">
+                                                    <div id="smartdns_dualstack_on_of">
+                                                        <input type="checkbox" id="smartdns_dualstack_fake" <% nvram_match_x("","smartdns_dualstack","1","value=1 checked"); %><% nvram_match_x("","smartdns_dualstack","0","value=0"); %>>
+                                                    </div>
+                                                </div>
+                                                <div style="position: absolute; margin-left: -10000px;">
+                                                    <input type="radio" name="smartdns_dualstack" id="smartdns_dualstack_1" class="input" value="1" <% nvram_match_x("","smartdns_dualstack","1","checked"); %>/>是
+                                                    <input type="radio" name="smartdns_dualstack" id="smartdns_dualstack_0" class="input" value="0" <% nvram_match_x("","smartdns_dualstack","0","checked"); %>/>否
+                                                </div>
+                                                <br/><span class="explain">域名同时解析到 IPv4/IPv6 时，优先返回实测连通性更好的地址。</span>
+                                            </td>
+                                        </tr>
+                                        <tr id="smartdns_ttl">
+                                            <th width="50%">缓存最小 TTL(秒)</th>
+                                            <td>
+                                                <input type="text" maxlength="8" class="input" size="15" name="smartdns_ttl_min" style="width: 145px" value="<% nvram_get_x("","smartdns_ttl_min"); %>" />
+                                                <br/><span class="explain">0 = 不限制；大于 0 时把缓存记录 TTL 抬高到该值，延长缓存有效期（降低上游压力）。</span>
                                             </td>
                                         </tr>
 

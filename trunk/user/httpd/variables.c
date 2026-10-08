@@ -138,6 +138,9 @@
 		{"smartdns_port", "", NULL, EVM_RESTART_SMARTDNS},
 		{"smartdns_servers", "", NULL, EVM_RESTART_SMARTDNS},
 		{"smartdns_cache", "", NULL, EVM_RESTART_SMARTDNS},
+		{"smartdns_speed_check", "", NULL, EVM_RESTART_SMARTDNS},
+		{"smartdns_dualstack", "", NULL, EVM_RESTART_SMARTDNS},
+		{"smartdns_ttl_min", "", NULL, EVM_RESTART_SMARTDNS},
 #endif
 #if defined (APP_NAPT66)
 			{"napt66_enable", "", NULL, FALSE},
