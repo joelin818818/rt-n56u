@@ -594,8 +594,8 @@ function show_menu(L1, L2, L3){
 	for(var i = 1; i <= menuL2_title.length-1; ++i){
 		if(menuL2_title[i] == "")
 			continue;
-		else if(menuL2_link[i] == "#")	// 分组标题（如"插件"），仅显示不可点击
-			menu2_code += '<a href="javascript: void(0)" style="cursor: default; font-weight: bold; color: #555;"><i class="icon-th-large"></i>&nbsp;&nbsp;'+menuL2_title[i]+'</a>\n';
+		else if(menuL2_link[i] == "#")	// 分组行（如"插件"），样式与普通菜单项同级，仅不可点击
+			menu2_code += '<a href="javascript: void(0)"><i class="icon-minus"></i>&nbsp;&nbsp;'+menuL2_title[i]+'</a>\n';
 		else if(L2 == i)
 			menu2_code += '<a href="javascript: void(0)" style="color: #005580; font-weight: bold"><i class="icon-minus"></i>&nbsp;&nbsp;'+menuL2_title[i]+'</a>\n';
 		else
