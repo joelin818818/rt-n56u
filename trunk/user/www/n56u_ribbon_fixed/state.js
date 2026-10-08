@@ -450,9 +450,8 @@ if (found_app_mentohust()){
 	menuL2_title.push("mentohust");
 } else menuL2_title.push("");
 
-// 插件分组：后续新增插件都挂在该分组下（分组标题用 link "#" 标记，仅作显示；link 在下方 menuL2_link 初始化后对应 push）
-menuL2_title.push("插件");
-
+// 插件作为一级菜单（index 8），其下子项（SmartDNS 等）作为 L2 挂在末尾
+var menuL2_plugin_start = menuL2_title.length; // 下一个 push 即插件 L2 子项起点（SmartDNS=15）
 if (found_app_smartdns()){
 	menuL2_title.push("SmartDNS");
 } else menuL2_title.push("");
@@ -475,16 +474,14 @@ if (found_app_mentohust()){
 	menuL2_link.push(mentohust_array[1]);
 } else menuL2_link.push("");
 
-menuL2_link.push("#");	// 「插件」分组标题（与上方 menuL2_title.push("插件") 对应）
-
 if (found_app_smartdns()){
 	menuL2_link.push("Advanced_SmartDNS_Content.asp");
 } else menuL2_link.push("");
 
 //Level 1 Menu in Gateway, Router mode
-menuL1_title = new Array("", "<#menu1#>", "", "", "", "<#menu4#>", "<#menu5_8#>", "<#menu5#>");
-menuL1_link = new Array("", "index.asp", "", "", "", "Main_TrafficMonitor_realtime.asp", "Advanced_System_Info.asp", "as.asp");
-menuL1_icon = new Array("", "icon-home", "icon-hdd", "icon-retweet", "icon-globe", "icon-tasks", "icon-random", "icon-wrench");
+menuL1_title = new Array("", "<#menu1#>", "", "", "", "<#menu4#>", "<#menu5_8#>", "<#menu5#>", found_app_smartdns() ? "插件" : "");
+menuL1_link = new Array("", "index.asp", "", "", "", "Main_TrafficMonitor_realtime.asp", "Advanced_System_Info.asp", "as.asp", found_app_smartdns() ? "Advanced_SmartDNS_Content.asp" : "");
+menuL1_icon = new Array("", "icon-home", "icon-hdd", "icon-retweet", "icon-globe", "icon-tasks", "icon-random", "icon-wrench", found_app_smartdns() ? "icon-th-large" : "");
 
 function show_menu(L1, L2, L3){
 	var i;
@@ -594,9 +591,16 @@ function show_menu(L1, L2, L3){
 	for(var i = 1; i <= menuL2_title.length-1; ++i){
 		if(menuL2_title[i] == "")
 			continue;
-		else if(menuL2_link[i] == "#")	// 分组行（如"插件"），样式与普通菜单项同级，仅不可点击
-			menu2_code += '<a href="javascript: void(0)"><i class="icon-minus"></i>&nbsp;&nbsp;'+menuL2_title[i]+'</a>\n';
-		else if(L2 == i)
+		var isPluginItem = (i >= menuL2_plugin_start); // 插件 L2 子项（SmartDNS 等）
+		if(menuL1_title[L1] == "插件"){   // 「插件」一级菜单：仅显示其下的插件子项
+			if(!isPluginItem)
+				continue;
+		}
+		else{                              // 其余一级菜单：隐藏插件子项
+			if(isPluginItem)
+				continue;
+		}
+		if(L2 == i)
 			menu2_code += '<a href="javascript: void(0)" style="color: #005580; font-weight: bold"><i class="icon-minus"></i>&nbsp;&nbsp;'+menuL2_title[i]+'</a>\n';
 		else
 			menu2_code += '<a href="'+menuL2_link[i]+'"><i class="icon-minus"></i>&nbsp;&nbsp;'+menuL2_title[i]+'</a>\n';

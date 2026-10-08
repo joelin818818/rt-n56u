@@ -30,7 +30,7 @@ $j(document).ready(function() {
 
 function initial(){
 	show_banner(1);
-	show_menu(5,16,0);
+	show_menu(8,15,0);
 	show_footer();
 
 	if(!found_app_smartdns()){
