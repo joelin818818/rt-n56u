@@ -32,12 +32,12 @@ Contributors of this project are not responsible for what happens next.
 ### 本仓库固件说明（PSG1218 / 斐讯 K2） ###
 本仓库是 [hanwckf/rt-n56u](https://github.com/hanwckf/rt-n56u) 的一个**定制分支**，仅针对 **斐讯 K2（PSG1218，64MB 内存 / 8MB 闪存 / 无 USB）** 构建固件。
 
-- **当前版本**：v1.3.0（见 [Releases](https://github.com/joelin818818/rt-n56u/releases) 附件中的 `.trx`）
+- **当前版本**：v1.3.1（见 [Releases](https://github.com/joelin818818/rt-n56u/releases) 附件中的 `.trx`）
 - **构建方式**：GitHub Actions 自动构建；每次推送 `v*` 标签即把生成的 `.trx` 发布到 Releases。
 - **主要特性**：
   - **SmartDNS 接管 DNS**：内置 smartdns 默认监听 53 端口（绑定 `127.0.0.1` 与 LAN IP），启用时 dnsmasq 仅作 DHCP（`port=0`），全 LAN 的 DNS 查询直达 smartdns，少一跳、解析更快；「插件 → SmartDNS」独立页面可配置上游 DNS、缓存条数，并实时显示运行状态 / 监听地址 / 上游 / 缓存容量（内置 Release33 无缓存命中计数，故状态行显示缓存容量而非命中数）。
   - **精简插件**：关闭 10 个本机用不到的插件（SMBD36 / FFMPEG_NEW / XUPNPD / TCPDUMP / SRELAY / DOGCOM / MINIEAP / NJIT_CLIENT / IPERF3 / VLMCSD）以节省闪存空间。
-- **版本演进**：v1.1.0（smartdns 原生界面）→ v1.2.0（smartdns 直连 DNS 53）→ v1.3.0（SmartDNS 独立配置页 + CI 编译缓存提速）。
+- **版本演进**：v1.1.0（smartdns 原生界面）→ v1.2.0（smartdns 直连 DNS 53）→ v1.3.0（SmartDNS 独立配置页 + CI 编译缓存）→ v1.3.1（修复左侧菜单不显示）。
 - **刷机提示**：刷机前请备份原厂设置；首次刷入建议恢复出厂设置。若从旧版升级，请在「系统管理 → 服务」中将 smartdns「本地端口」确认为 `53`（旧版残留的 6053 会导致直连模式 DNS 失效）。
 
 ***
