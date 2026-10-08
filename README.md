@@ -1,6 +1,6 @@
-![CI](https://github.com/hanwckf/rt-n56u/workflows/CI/badge.svg)
-![GitHub All Releases](https://img.shields.io/github/downloads/hanwckf/rt-n56u/total)
-[![release](https://img.shields.io/github/release/hanwckf/rt-n56u.svg)](https://github.com/hanwckf/rt-n56u/releases)
+![CI](https://github.com/joelin818818/rt-n56u/actions/workflows/CI.yml/badge.svg)
+![GitHub All Releases](https://img.shields.io/github/downloads/joelin818818/rt-n56u/total)
+[![release](https://img.shields.io/github/release/joelin818818/rt-n56u.svg)](https://github.com/joelin818818/rt-n56u/releases)
 
 # README #
 
@@ -26,6 +26,18 @@ Contributors of this project are not responsible for what happens next.
 ### 特别说明 ###
 * 汉化字典来自：https://github.com/gorden5566/padavan
 * 更新日志：https://www.jianshu.com/p/d76a63a12eae
+
+***
+
+### 本仓库固件说明（PSG1218 / 斐讯 K2） ###
+本仓库是 [hanwckf/rt-n56u](https://github.com/hanwckf/rt-n56u) 的一个**定制分支**，仅针对 **斐讯 K2（PSG1218，64MB 内存 / 8MB 闪存 / 无 USB）** 构建固件。
+
+- **当前版本**：v1.1.0（见 [Releases](https://github.com/joelin818818/rt-n56u/releases) 附件中的 `.trx`）
+- **构建方式**：GitHub Actions 自动构建；每次推送 `v*` 标签即把生成的 `.trx` 发布到 Releases。
+- **本次更新（v1.1.0）**：
+  - 新增 **smartdns 原生管理界面**：在「系统管理 → 服务」页可开关 smartdns，并配置上游 DNS、本地端口、缓存条数；保存后自动联动 dnsmasq，使全 LAN 的 DNS 查询经 smartdns 解析（默认端口 6053，上游 `223.5.5.5:53` / `119.29.29.29:53`）。
+  - 关闭 10 个本机用不到的插件（SMBD36 / FFMPEG_NEW / XUPNPD / TCPDUMP / SRELAY / DOGCOM / MINIEAP / NJIT_CLIENT / IPERF3 / VLMCSD）以节省闪存空间。
+- **刷机提示**：刷机前请备份原厂设置；首次刷入建议恢复出厂设置。
 
 ***
 
