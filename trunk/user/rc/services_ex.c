@@ -294,12 +294,25 @@ start_dns_dhcpd(int is_ap_mode)
 {
 	FILE *fp;
 	int i_verbose, i_dhcp_enable, is_dhcp_used, is_dns_used;
+	int sd_port = 53, sd_running = 0;
 	char dhcp_start[32], dhcp_end[32], dns_all[64], dnsv6[40];
 	char *ipaddr, *netmask, *gw, *dns1, *dns2, *dns3, *wins, *domain, *dns6;
 	const char *storage_dir = "/etc/storage/dnsmasq";
 
 	i_dhcp_enable = is_dhcpd_enabled(is_ap_mode);
 	i_verbose = nvram_get_int("dhcp_verbose");
+
+#if defined(APP_SMARTDNS)
+	/* smartdns 须在 dnsmasq 启动前绑定端口（此函数被调用时旧 dnsmasq 已停止，53 空闲）；
+	   启动后检测是否存活，失败则由 dnsmasq 回退接管 DNS，避免全网断解析 */
+	if (nvram_get_int("smartdns_enable") == 1) {
+		sd_port = nvram_get_int("smartdns_port");
+		if (sd_port <= 0)
+			sd_port = 53;
+		start_smartdns();
+		sd_running = (pids("smartdns") > 0);
+	}
+#endif
 
 	ipaddr  = nvram_safe_get("lan_ipaddr");
 	netmask = nvram_safe_get("lan_netmask");
@@ -347,10 +360,16 @@ start_dns_dhcpd(int is_ap_mode)
 		fprintf(fp, "dns-forward-max=%d\n", DNS_RELAY_QUERIES_MAX);
 		fprintf(fp, "addn-hosts=%s/hosts\n", storage_dir);
 #if defined(APP_SMARTDNS)
-		if (nvram_get_int("smartdns_enable") == 1) {
-			/* smartdns 直接监听 53 接管 DNS，dnsmasq 仅保留 DHCP 服务 */
-			fprintf(fp, "port=0\n");
+		if (nvram_get_int("smartdns_enable") == 1 && sd_running) {
+			if (sd_port == 53) {
+				/* smartdns 已绑定 53 接管 DNS，dnsmasq 仅保留 DHCP 服务 */
+				fprintf(fp, "port=0\n");
+			} else {
+				/* smartdns 监听非 53 端口：dnsmasq 继续监听 53 并转发给 smartdns */
+				fprintf(fp, "no-resolv\nserver=127.0.0.1#%d\n", sd_port);
+			}
 		} else {
+			/* smartdns 未启用或启动失败：dnsmasq 正常接管 DNS */
 			fprintf(fp, "servers-file=%s\n", DNS_SERVERS_FILE);
 		}
 #else
@@ -512,11 +531,6 @@ start_dns_dhcpd(int is_ap_mode)
 
 	if (is_dns_used)
 		fill_dnsmasq_servers();
-
-#if defined(APP_SMARTDNS)
-	if (nvram_get_int("smartdns_enable") == 1)
-		start_smartdns();
-#endif
 
 	if (is_dns_used || is_dhcp_used)
 		return eval("/usr/sbin/dnsmasq");

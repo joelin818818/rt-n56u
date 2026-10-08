@@ -130,7 +130,7 @@ function applyRule(){
                                             <th width="50%">本地端口</th>
                                             <td>
                                                 <input type="text" maxlength="6" class="input" size="15" name="smartdns_port" style="width: 145px" value="<% nvram_get_x("","smartdns_port"); %>" />
-                                                <br/><span class="explain">SmartDNS 直连 DNS 端口，须保持 53（与 DHCP 下发的 DNS 端口一致）。改非 53 会导致 LAN 设备无法解析。</span>
+                                                <br/><span class="explain">53 = SmartDNS 直连接管 DNS（推荐）；非 53 = dnsmasq 自动监听 53 并转发到 SmartDNS。</span>
                                             </td>
                                         </tr>
                                         <tr id="smartdns_servers">

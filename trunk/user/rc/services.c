@@ -393,8 +393,11 @@ void start_smartdns(void){
 }
 
 void restart_smartdns(void){
+	/* 先停 smartdns（否则旧进程仍占用旧端口、新配置不生效）；
+	   再重启 dnsmasq：stop_dns_dhcpd 先停掉旧 dnsmasq 释放 53，
+	   start_dns_dhcpd 内部再启动 smartdns（此时绑定 53 必然成功）。
+	   旧实现先启动 smartdns，会被仍在监听 53 的旧 dnsmasq 抢先导致绑定失败 */
 	stop_smartdns();
-	start_smartdns();
 	restart_dhcpd();
 }
 #endif

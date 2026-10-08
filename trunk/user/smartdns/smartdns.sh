@@ -34,7 +34,12 @@ func_start(){
 	fi
 	gen_conf
 	/usr/bin/smartdns -c $CONF
-	logger -st "smartdns" "start"
+	sleep 1
+	if pidof smartdns >/dev/null 2>&1; then
+		logger -st "smartdns" "started"
+	else
+		logger -st "smartdns" "start failed (port busy or bad config?)"
+	fi
 }
 
 func_stop(){
