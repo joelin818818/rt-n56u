@@ -553,9 +553,9 @@ struct nvram_pair router_defaults[] = {
 	/* smartdns */
 	{ "smartdns_enable", "0" },
 	{ "smartdns_port", "53" },
-	{ "smartdns_servers", "223.5.5.5:53 119.29.29.29:53" },
+	{ "smartdns_servers", "udp|223.5.5.5:53 udp|119.29.29.29:53" },
 	{ "smartdns_cache", "512" },
-	{ "smartdns_speed_check", "ping,tcp:80,udp:53" },
+	{ "smartdns_speed_check", "ping,tcp:80,tcp:443" },
 	{ "smartdns_dualstack", "0" },
 	{ "smartdns_ttl_min", "0" },
 #endif

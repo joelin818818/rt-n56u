@@ -45,6 +45,8 @@ function initial(){
 	}else{
 		change_smartdns_enabled();
 	}
+	init_smartdns_speed();
+	init_smartdns_servers();
 }
 
 function change_smartdns_enabled(){
@@ -58,11 +60,141 @@ function change_smartdns_enabled(){
 }
 
 function applyRule(){
+	compose_smartdns_speed();
+	sd_compose_servers();
 	showLoading();
 	document.form.action_mode.value = " Apply ";
 	document.form.current_page.value = "Advanced_SmartDNS_Content.asp";
 	document.form.next_page.value = "";
 	document.form.submit();
+}
+
+/* ===== 测速选优（三框） ===== */
+function init_smartdns_speed(){
+	var raw = document.form.smartdns_speed_check.value;
+	var parts = (raw && raw.length) ? raw.split(',') : [];
+	var sels = ['smartdns_speed_1','smartdns_speed_2','smartdns_speed_3'];
+	for (var i=0;i<3;i++){
+		var v = (i < parts.length) ? parts[i] : 'none';
+		if (v !== 'ping' && v !== 'tcp:80' && v !== 'tcp:443') v = 'none';
+		document.getElementById(sels[i]).value = v;
+	}
+}
+function compose_smartdns_speed(){
+	var sels = ['smartdns_speed_1','smartdns_speed_2','smartdns_speed_3'];
+	var seen = {}, out = [];
+	for (var i=0;i<3;i++){
+		var v = document.getElementById(sels[i]).value;
+		if (v === 'none' || seen[v]) continue;
+		seen[v] = 1; out.push(v);
+	}
+	document.form.smartdns_speed_check.value = (out.length ? out.join(',') : 'none');
+}
+
+/* ===== 上游 DNS（动态增删 + 预设/自定义） ===== */
+var SD_PRESETS = [
+ {g:"国内 UDP(53)", i:[
+   {t:"udp",v:"223.5.5.5:53",l:"阿里 DNS 223.5.5.5"},
+   {t:"udp",v:"223.6.6.6:53",l:"阿里 DNS 223.6.6.6"},
+   {t:"udp",v:"119.29.29.29:53",l:"腾讯 DNSPod 119.29.29.29"},
+   {t:"udp",v:"180.76.76.76:53",l:"百度 DNS 180.76.76.76"},
+   {t:"udp",v:"114.114.114.114:53",l:"114 DNS 114.114.114.114"}]},
+ {g:"国内 TCP", i:[
+   {t:"tcp",v:"223.5.5.5:53",l:"阿里 DNS 223.5.5.5 (TCP)"},
+   {t:"tcp",v:"119.29.29.29:53",l:"腾讯 DNSPod 119.29.29.29 (TCP)"}]},
+ {g:"国内 DoT(853)", i:[
+   {t:"tls",v:"dns.alidns.com:853",l:"阿里 DoT dns.alidns.com"},
+   {t:"tls",v:"dot.pub:853",l:"腾讯 DoT dot.pub"},
+   {t:"tls",v:"dns.360.cn:853",l:"360 DoT dns.360.cn"}]},
+ {g:"国内 DoH", i:[
+   {t:"https",v:"https://dns.alidns.com/dns-query",l:"阿里 DoH"},
+   {t:"https",v:"https://doh.pub/dns-query",l:"腾讯 DoH"},
+   {t:"https",v:"https://doh.360.cn/dns-query",l:"360 DoH"}]},
+ {g:"国外 UDP(53)", i:[
+   {t:"udp",v:"8.8.8.8:53",l:"Google 8.8.8.8"},
+   {t:"udp",v:"8.8.4.4:53",l:"Google 8.8.4.4"},
+   {t:"udp",v:"1.1.1.1:53",l:"Cloudflare 1.1.1.1"},
+   {t:"udp",v:"1.0.0.1:53",l:"Cloudflare 1.0.0.1"},
+   {t:"udp",v:"9.9.9.9:53",l:"Quad9 9.9.9.9"},
+   {t:"udp",v:"208.67.222.222:53",l:"OpenDNS 208.67.222.222"},
+   {t:"udp",v:"94.140.14.14:53",l:"AdGuard 94.140.14.14"}]},
+ {g:"国外 TCP", i:[
+   {t:"tcp",v:"8.8.8.8:53",l:"Google 8.8.8.8 (TCP)"},
+   {t:"tcp",v:"1.1.1.1:53",l:"Cloudflare 1.1.1.1 (TCP)"}]},
+ {g:"国外 DoT(853)", i:[
+   {t:"tls",v:"dns.google:853",l:"Google DoT dns.google"},
+   {t:"tls",v:"1.1.1.1:853",l:"Cloudflare DoT 1.1.1.1"},
+   {t:"tls",v:"dns.quad9.net:853",l:"Quad9 DoT dns.quad9.net"},
+   {t:"tls",v:"dns.adguard.com:853",l:"AdGuard DoT dns.adguard.com"}]},
+ {g:"国外 DoH", i:[
+   {t:"https",v:"https://dns.google/dns-query",l:"Google DoH"},
+   {t:"https",v:"https://cloudflare-dns.com/dns-query",l:"Cloudflare DoH"},
+   {t:"https",v:"https://dns.quad9.net/dns-query",l:"Quad9 DoH"},
+   {t:"https",v:"https://dns.adguard.com/dns-query",l:"AdGuard DoH"}]}
+];
+
+function sd_preset_options(){
+	var h = '<option value="__custom__">自定义…</option>';
+	for (var i=0;i<SD_PRESETS.length;i++){
+		h += '<optgroup label="'+SD_PRESETS[i].g+'">';
+		for (var j=0;j<SD_PRESETS[i].i.length;j++){
+			var it = SD_PRESETS[i].i[j];
+			h += '<option value="'+it.t+'|'+it.v+'">'+it.l+'</option>';
+		}
+		h += '</optgroup>';
+	}
+	return h;
+}
+function sd_render_row(enc){
+	var list = document.getElementById('sd_servers_list');
+	var div = document.createElement('div');
+	div.style.marginBottom = '4px';
+	var sel = document.createElement('select');
+	sel.className = 'input'; sel.style.width = '300px';
+	sel.innerHTML = sd_preset_options();
+	var cust = document.createElement('span');
+	cust.style.display = 'none';
+	cust.innerHTML = ' 协议<select class="input sd_ptype" style="width:90px">'+
+		'<option value="udp">UDP</option><option value="tcp">TCP</option>'+
+		'<option value="tls">DoT</option><option value="https">DoH</option></select>'+
+		' 地址<input class="input sd_pval" style="width:300px" placeholder="host:port 或 https://.../dns-query" />';
+	var del = document.createElement('button');
+	del.type='button'; del.className='btn btn-small'; del.textContent='− 减少';
+	del.onclick = function(){ list.removeChild(div); };
+	sel.onchange = function(){ cust.style.display = (sel.value === '__custom__') ? '' : 'none'; };
+	if (enc){
+		if (enc.indexOf('|') > 0){
+			sel.value = enc;
+		} else {
+			sel.value = '__custom__'; cust.style.display='';
+			cust.querySelector('.sd_ptype').value = 'udp';
+			cust.querySelector('.sd_pval').value = enc;
+		}
+	}
+	div.appendChild(sel); div.appendChild(cust); div.appendChild(del);
+	list.appendChild(div);
+}
+function sd_add_server(){ sd_render_row(''); }
+function sd_compose_servers(){
+	var list = document.getElementById('sd_servers_list');
+	var rows = list.children, out = [];
+	for (var i=0;i<rows.length;i++){
+		var sel = rows[i].querySelector('select');
+		if (sel.value === '__custom__'){
+			var p = rows[i].querySelector('.sd_ptype').value;
+			var v = rows[i].querySelector('.sd_pval').value.trim();
+			if (v) out.push(p+'|'+v);
+		} else if (sel.value){
+			out.push(sel.value);
+		}
+	}
+	document.form.smartdns_servers.value = out.join(' ');
+}
+function init_smartdns_servers(){
+	var raw = document.form.smartdns_servers.value;
+	var arr = (raw && raw.length) ? raw.split(' ') : [];
+	if (arr.length === 0) arr = ['udp|223.5.5.5:53','udp|119.29.29.29:53'];
+	for (var i=0;i<arr.length;i++) sd_render_row(arr[i]);
 }
 </script>
 </head>
@@ -143,8 +275,10 @@ function applyRule(){
                                         <tr id="smartdns_servers">
                                             <th width="50%">上游 DNS</th>
                                             <td>
-                                                <input type="text" maxlength="256" class="input" size="60" name="smartdns_servers" value="<% nvram_get_x("","smartdns_servers"); %>" /><br/>
-                                                <span class="explain">空格分隔，例如 223.5.5.5:53 119.29.29.29:53</span>
+                                                <input type="hidden" name="smartdns_servers" value="<% nvram_get_x("","smartdns_servers"); %>" />
+                                                <div id="sd_servers_list"></div>
+                                                <button type="button" class="btn btn-small" onclick="sd_add_server()">+ 增加</button>
+                                                <br/><span class="explain">逐条添加；下拉含国内外 UDP/TCP/DoT/DoH 预设，选「自定义」可填任意 地址:端口 或 DoT/DoH 地址（支持非标端口）。</span>
                                             </td>
                                         </tr>
                                         <tr id="smartdns_cache">
@@ -154,16 +288,28 @@ function applyRule(){
                                             </td>
                                         </tr>
                                         <tr id="smartdns_speed">
-                                            <th width="50%">测速选优</th>
+                                            <th width="50%">测速选优模式</th>
                                             <td>
-                                                <select name="smartdns_speed_check" class="input" style="width: 220px">
-                                                    <option value="ping,tcp:80,udp:53" <% nvram_match_x("","smartdns_speed_check","ping,tcp:80,udp:53","selected"); %>>综合测速 (Ping + TCP80 + UDP53)</option>
-                                                    <option value="ping" <% nvram_match_x("","smartdns_speed_check","ping","selected"); %>>仅 Ping</option>
-                                                    <option value="tcp:80" <% nvram_match_x("","smartdns_speed_check","tcp:80","selected"); %>>仅 TCP:80</option>
-                                                    <option value="udp:53" <% nvram_match_x("","smartdns_speed_check","udp:53","selected"); %>>仅 UDP:53</option>
-                                                    <option value="none" <% nvram_match_x("","smartdns_speed_check","none","selected"); %>>关闭</option>
+                                                <input type="hidden" name="smartdns_speed_check" value="<% nvram_get_x("","smartdns_speed_check"); %>" />
+                                                <select id="smartdns_speed_1" class="input" style="width: 120px">
+                                                    <option value="ping">Ping</option>
+                                                    <option value="tcp:80">TCP:80</option>
+                                                    <option value="tcp:443">TCP:443</option>
+                                                    <option value="none">无</option>
                                                 </select>
-                                                <br/><span class="explain">多上游时用于择优选路；综合测速兼容性好，但 UDP:53 可能被运营商限制。</span>
+                                                <select id="smartdns_speed_2" class="input" style="width: 120px">
+                                                    <option value="ping">Ping</option>
+                                                    <option value="tcp:80">TCP:80</option>
+                                                    <option value="tcp:443">TCP:443</option>
+                                                    <option value="none">无</option>
+                                                </select>
+                                                <select id="smartdns_speed_3" class="input" style="width: 120px">
+                                                    <option value="ping">Ping</option>
+                                                    <option value="tcp:80">TCP:80</option>
+                                                    <option value="tcp:443">TCP:443</option>
+                                                    <option value="none">无</option>
+                                                </select>
+                                                <br/><span class="explain">三个框按顺序触发（每级间隔 200ms）。选「无」= 该位置留空；三个都为「无」即关闭测速。重复模式会自动合并。</span>
                                             </td>
                                         </tr>
                                         <tr id="smartdns_dualstack">

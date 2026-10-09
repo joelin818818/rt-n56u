@@ -26,7 +26,10 @@ gen_conf(){
 	echo "prefetch-domain yes" >> $CONF
 	echo "serve-expired yes" >> $CONF
 	if [ -n "$speed_check" ] && [ "$speed_check" != "none" ]; then
-		echo "speed-check-mode $speed_check" >> $CONF
+		case "$speed_check" in
+			*udp*) logger -st "smartdns" "skip invalid speed-check-mode: $speed_check"; speed_check="" ;;
+		esac
+		[ -n "$speed_check" ] && echo "speed-check-mode $speed_check" >> $CONF
 	fi
 	if [ "$dualstack" = "1" ]; then
 		echo "dualstack-ip-selection yes" >> $CONF
@@ -35,15 +38,25 @@ gen_conf(){
 		echo "rr-ttl-min $ttl_min" >> $CONF
 	fi
 	for s in $servers; do
-		echo "server $s" >> $CONF
+		[ -z "$s" ] && continue
+		case "$s" in
+			*\|*) t=${s%%|*}; a=${s#*|} ;;
+			*)    t=udp; a=$s ;;
+		esac
+		case "$t" in
+			tcp)   echo "server $a -tcp" >> $CONF ;;
+			tls)   echo "server-tls $a" >> $CONF ;;
+			https) echo "server-https $a" >> $CONF ;;
+			*)     echo "server $a" >> $CONF ;;
+		esac
 	done
 }
 
 func_start(){
-	if pidof smartdns >/dev/null 2>&1; then
-		logger -st "smartdns" "already running"
-		return 0
-	fi
+	# 重启/重复启动时先确保旧进程退出并重新生成配置，
+	# 避免 restart 链路中“旧进程尚未退出即被判为已运行”而跳过启动。
+	killall -q smartdns
+	sleep 1
 	gen_conf
 	/usr/bin/smartdns -c $CONF
 	sleep 1
