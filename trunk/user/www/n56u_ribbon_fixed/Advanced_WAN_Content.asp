@@ -28,6 +28,7 @@ $j(document).ready(function() {
 	init_itoggle('x_DHCPClient', change_wan_dhcp_auto);
 	init_itoggle('wan_dnsenable_x', change_wan_dns_auto);
 	init_itoggle('vlan_filter', change_stb_port_and_vlan);
+	init_itoggle('wan_randmac_enable', change_randmac);
 });
 
 </script>
@@ -90,6 +91,16 @@ function initial(){
 	AuthSelection(document.form.wan_auth_mode.value);
 
 	change_stb_port_and_vlan();
+	change_randmac();
+}
+
+function change_randmac(){
+	var on = document.form.wan_randmac_enable[0].checked;
+	var by_time = (document.form.wan_randmac_mode.value == "1");
+	showhide_div('row_randmac_mode', on);
+	showhide_div('row_randmac_interval', on && !by_time);
+	showhide_div('row_randmac_times', on && by_time);
+	showhide_div('row_randmac_desc', on);
 }
 
 function applyRule(){
@@ -264,6 +275,14 @@ function validForm(){
 				mask_obj.select();
 				return false;
 			}
+		}
+	}
+
+	if(document.form.wan_randmac_enable[0].checked && document.form.wan_randmac_mode.value == "1"){
+		if(!/^([01]?\d|2[0-3]):[0-5]\d(\s*,\s*([01]?\d|2[0-3]):[0-5]\d)*$/.test(document.form.wan_randmac_times.value)){
+			alert("<#WAN_RANDMAC_Times_Invalid#>");
+			document.form.wan_randmac_times.focus();
+			return false;
 		}
 	}
 
@@ -1026,25 +1045,49 @@ function simplyMAC(fullMAC){
                                             </td>
                                         </tr>
                                         <tr>
-                                            <th><#WAN_RANDMAC_Enable#></th>
+                                            <th colspan="2" style="background-color: #E3E3E3;"><#WAN_RANDMAC_Section#></th>
+                                        </tr>
+                                        <tr>
+                                            <th width="50%"><#WAN_RANDMAC_Enable#></th>
                                             <td>
-                                                <select name="wan_randmac_enable" class="input">
-                                                    <option value="0" <% nvram_match_x("", "wan_randmac_enable", "0", "selected"); %>>关闭</option>
-                                                    <option value="1" <% nvram_match_x("", "wan_randmac_enable", "1", "selected"); %>>开启</option>
+                                                <div class="main_itoggle">
+                                                    <div id="wan_randmac_enable_on_of">
+                                                        <input type="checkbox" id="wan_randmac_enable_fake" <% nvram_match_x("", "wan_randmac_enable", "1", "value=1 checked"); %><% nvram_match_x("", "wan_randmac_enable", "0", "value=0"); %>>
+                                                    </div>
+                                                </div>
+                                                <div style="position: absolute; margin-left: -10000px;">
+                                                    <input type="radio" value="1" name="wan_randmac_enable" id="wan_randmac_enable_1" class="input" <% nvram_match_x("", "wan_randmac_enable", "1", "checked"); %>/><#checkbox_Yes#>
+                                                    <input type="radio" value="0" name="wan_randmac_enable" id="wan_randmac_enable_0" class="input" <% nvram_match_x("", "wan_randmac_enable", "0", "checked"); %>/><#checkbox_No#>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr id="row_randmac_mode" style="display:none;">
+                                            <th style="border-top: 0 none; padding-left: 20px;"><#WAN_RANDMAC_Mode#></th>
+                                            <td style="border-top: 0 none;">
+                                                <select name="wan_randmac_mode" class="input" onchange="change_randmac();">
+                                                    <option value="0" <% nvram_match_x("", "wan_randmac_mode", "0", "selected"); %>><#WAN_RANDMAC_Mode_Interval#></option>
+                                                    <option value="1" <% nvram_match_x("", "wan_randmac_mode", "1", "selected"); %>><#WAN_RANDMAC_Mode_Times#></option>
                                                 </select>
                                             </td>
                                         </tr>
-                                        <tr>
-                                            <th><#WAN_RANDMAC_Interval#></th>
-                                            <td>
+                                        <tr id="row_randmac_interval" style="display:none;">
+                                            <th style="border-top: 0 none; padding-left: 36px;"><#WAN_RANDMAC_Interval#></th>
+                                            <td style="border-top: 0 none;">
                                                 <input type="text" name="wan_randmac_interval" class="input" maxlength="5" size="8" value="<% nvram_get_x("","wan_randmac_interval"); %>"/>
                                                 <select name="wan_randmac_unit" class="input">
-                                                    <option value="0" <% nvram_match_x("", "wan_randmac_unit", "0", "selected"); %>>分钟</option>
-                                                    <option value="1" <% nvram_match_x("", "wan_randmac_unit", "1", "selected"); %>>小时</option>
+                                                    <option value="0" <% nvram_match_x("", "wan_randmac_unit", "0", "selected"); %>><#WAN_RANDMAC_Unit_Min#></option>
+                                                    <option value="1" <% nvram_match_x("", "wan_randmac_unit", "1", "selected"); %>><#WAN_RANDMAC_Unit_Hour#></option>
                                                 </select>
                                             </td>
                                         </tr>
-                                        <tr>
+                                        <tr id="row_randmac_times" style="display:none;">
+                                            <th style="border-top: 0 none; padding-left: 36px;"><#WAN_RANDMAC_Times#></th>
+                                            <td style="border-top: 0 none;">
+                                                <input type="text" name="wan_randmac_times" class="input" maxlength="128" size="32" value="<% nvram_get_x("","wan_randmac_times"); %>"/>
+                                                <br/><span class="explain"><#WAN_RANDMAC_Times_Desc#></span>
+                                            </td>
+                                        </tr>
+                                        <tr id="row_randmac_desc" style="display:none;">
                                             <td colspan="2"><span class="explain"><#WAN_RANDMAC_Desc#></span></td>
                                         </tr>
                                         <tr>

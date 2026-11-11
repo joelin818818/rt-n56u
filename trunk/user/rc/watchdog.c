@@ -1090,24 +1090,53 @@ watchdog_on_timer(void)
 
 	/* periodic random WAN MAC rotation */
 	if (nvram_match("wan_randmac_enable", "1")) {
-		int rint = atoi(nvram_safe_get("wan_randmac_interval"));
-		int runit = atoi(nvram_safe_get("wan_randmac_unit"));
-		long rgap = (runit == 1) ? (long)rint * 3600 : (long)rint * 60;
 		time_t rnow = time(NULL);
 		time_t rlast = (time_t)atoi(nvram_safe_get("wan_randmac_last"));
+		int rotate = 0;
 
-		if (rgap < 60) rgap = 60;
-		if (rlast == 0) {
+		if (nvram_match("wan_randmac_mode", "1")) {
+			/* scheduled mode: HH:MM[,HH:MM...] in local time */
+			struct tm *lt = localtime(&rnow);
+
+			/* ponytail: minute-granularity dedup via wan_randmac_last;
+			   an NTP clock rollback may skip/duplicate one rotation */
+			if (rlast && lt && (rnow / 60) != (rlast / 60)) {
+				int cur_min = lt->tm_hour * 60 + lt->tm_min;
+				char *times = strdup(nvram_safe_get("wan_randmac_times"));
+				char *save = NULL, *tok;
+
+				if (times) {
+					for (tok = strtok_r(times, ",; \t", &save); tok;
+					     tok = strtok_r(NULL, ",; \t", &save)) {
+						int hh = 0, mm = 0;
+						if (sscanf(tok, "%d:%d", &hh, &mm) == 2 &&
+						    hh >= 0 && hh < 24 && mm >= 0 && mm < 60 &&
+						    hh * 60 + mm == cur_min) {
+							rotate = 1;
+							break;
+						}
+					}
+					free(times);
+				}
+			}
+		}
+		else {
+			int rint = atoi(nvram_safe_get("wan_randmac_interval"));
+			int runit = atoi(nvram_safe_get("wan_randmac_unit"));
+			long rgap = (runit == 1) ? (long)rint * 3600 : (long)rint * 60;
+
+			if (rgap < 60) rgap = 60;
+			if (rlast && rnow - rlast >= rgap)
+				rotate = 1;
+		}
+
+		if (!rlast || rotate) {
 			char tbuf[16];
 			snprintf(tbuf, sizeof(tbuf), "%ld", (long)rnow);
 			nvram_set("wan_randmac_last", tbuf);
 		}
-		else if (rnow - rlast >= rgap) {
-			char tbuf[16];
-			snprintf(tbuf, sizeof(tbuf), "%ld", (long)rnow);
-			nvram_set("wan_randmac_last", tbuf);
+		if (rotate)
 			notify_rc("manual_wan_reconnect");
-		}
 	}
 }
 

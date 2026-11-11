@@ -63,8 +63,10 @@ struct nvram_pair router_defaults[] = {
 	{ "wan_ifname", IFNAME_WAN },		/* WAN interface name */
 	{ "wan_hwaddr", "" },			/* WAN interface MAC address */
 	{ "wan_randmac_enable", "0" },		/* randomize WAN MAC */
+	{ "wan_randmac_mode", "0" },		/* 0=interval, 1=scheduled times */
 	{ "wan_randmac_interval", "60" },	/* random MAC rotation interval */
 	{ "wan_randmac_unit", "0" },		/* 0=minutes, 1=hours */
+	{ "wan_randmac_times", "13:00,18:00" },	/* scheduled rotation times (HH:MM,...) */
 
 	/* WAN TCP/IP parameters */
 	{ "wan_proto", "dhcp" },		/* [static|dhcp|pppoe|pptp|l2tp|disabled] */
